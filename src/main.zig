@@ -19,12 +19,15 @@ extern fn handle_reset() void;
 fn unhandled(comptime name: []const u8) extern fn () void {
     const ns = struct {
         extern fn handler() void {
-            // TODO: display message
-            an505.Uart0.print("caught an unhandled exception, system halted: {}\r\n", name);
-            while (true) {}
+            return unhandled_inner(name);
         }
     };
     return ns.handler;
+}
+
+fn unhandled_inner(name: []const u8) void {
+    an505.Uart0.print("caught an unhandled exception, system halted: {}\r\n", name);
+    while (true) {}
 }
 
 export const exception_vectors linksection(".isr_vector") = [_]extern fn () void{
