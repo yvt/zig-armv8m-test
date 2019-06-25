@@ -21,7 +21,7 @@ pub fn build(b: *Builder) !void {
     exe.setOutputDir("zig-cache");
     // TODO: "-mthumb -mfloat-abi=soft -msoft-float -march=armv8-m.main");
 
-    const qemu = b.step("qemu", "Run the OS in qemu");
+    const qemu = b.step("qemu", "Run the program in qemu");
     var qemu_args = std.ArrayList([]const u8).init(b.allocator);
     try qemu_args.appendSlice([_][]const u8{
         "qemu-system-arm",
