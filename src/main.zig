@@ -5,9 +5,9 @@ const an505 = @import("an505.zig");
 
 export fn main() void {
     // :( <https://github.com/ziglang/zig/issues/504>
-    an505.Uart0.configure(25e6, 115200);
-    an505.Uart0.print("(Hit ^A X to quit QEMU)\r\n");
-    an505.Uart0.print("hello!\r\n");
+    an505.uart0.configure(25e6, 115200);
+    an505.uart0.print("(Hit ^A X to quit QEMU)\r\n");
+    an505.uart0.print("hello!\r\n");
 
     // Configure SysTick
     arm_m.sys_tick.reg_rvr().* = 1000 * 100; // fire every 100 milliseconds
@@ -22,7 +22,7 @@ var counter: u8 = 0;
 
 extern fn handle_sys_tick() void {
     counter +%= 1;
-    an505.Uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
+    an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
 }
 
 /// Not a function, actually, but suppresses type error
@@ -42,7 +42,7 @@ fn unhandled(comptime name: []const u8) extern fn () void {
 }
 
 fn unhandled_inner(name: []const u8) void {
-    an505.Uart0.print("caught an unhandled exception, system halted: {}\r\n", name);
+    an505.uart0.print("caught an unhandled exception, system halted: {}\r\n", name);
     while (true) {}
 }
 
