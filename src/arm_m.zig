@@ -44,5 +44,150 @@ pub const SysTick = struct {
 pub const sys_tick = SysTick.with_base(0xe000e010);
 
 /// Represents the Non-Secure SysTick instance. This register is only accessible
-/// by Secure mode.
+/// by Secure mode (Armv8-M or later).
 pub const sys_tick_ns = SysTick.with_base(0xe002e010);
+
+/// Nested Vectored Interrupt Controller.
+pub const Nvic = struct {
+    base: usize,
+
+    const Self = @This();
+
+    /// Construct an `Nvic` object using the specified MMIO base address.
+    pub fn with_base(base: usize) Self {
+        return Self{ .base = base };
+    }
+
+    // Register Accessors
+    // -----------------------------------------------------------------------
+
+    /// Interrupt Set Enable Register.
+    pub fn reg_iser(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base);
+    }
+
+    /// Interrupt Clear Enable Register.
+    pub fn reg_icer(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base + 0x80);
+    }
+
+    /// Interrupt Set Pending Register.
+    pub fn reg_ispr(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base + 0x100);
+    }
+
+    /// Interrupt Clear Pending Register.
+    pub fn reg_icpr(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base + 0x180);
+    }
+
+    /// Interrupt Active Bit Register.
+    pub fn reg_iabr(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base + 0x200);
+    }
+
+    /// Interrupt Target Non-Secure Register (Armv8-M or later). RAZ/WI from
+    /// Non-Secure.
+    pub fn reg_itns(self: Self) *volatile [16]u32 {
+        return @intToPtr(*volatile [16]u32, self.base + 0x280);
+    }
+
+    /// Interrupt Priority Register.
+    pub fn reg_ipri(self: Self) *volatile [512]u8 {
+        return @intToPtr(*volatile [512]u8, self.base + 0x300);
+    }
+
+    // Helper functions
+    // -----------------------------------------------------------------------
+    // Note: Interrupt numbers are different from exception numbers.
+    // An exception number `Interrupt_IRQn(i)` corresponds to an interrupt
+    // number `i`.
+
+    /// Enable the interrupt number `irq`.
+    pub fn enable_irq(self: Self, irq: usize) void {
+        self.reg_iser()[irq >> 5] = u32(1) << @truncate(u5, irq);
+    }
+
+    /// Disable the interrupt number `irq`.
+    pub fn disable_irq(self: Self, irq: usize) void {
+        self.reg_icer()[irq >> 5] = u32(1) << @truncate(u5, irq);
+    }
+
+    /// Set the priority of the interrupt number `irq` to `pri`.
+    pub fn set_irq_priority(self: Self, irq: usize, pri: u8) void {
+        self.reg_ipri()[irq] = pri;
+    }
+};
+
+/// Represents the Nested Vectored Interrupt Controller instance corresponding
+/// to the current security mode.
+pub const nvic = Nvic.with_base(0xe000e100);
+
+/// Represents the Non-Secure Nested Vectored Interrupt Controller instance.
+/// This register is only accessible by Secure mode (Armv8-M or later).
+pub const nvic_ns = Nvic.with_base(0xe002e100);
+
+/// System Control Block.
+pub const Scb = struct {
+    base: usize,
+
+    const Self = @This();
+
+    /// Construct an `Nvic` object using the specified MMIO base address.
+    pub fn with_base(base: usize) Self {
+        return Self{ .base = base };
+    }
+
+    // Register Accessors
+    // -----------------------------------------------------------------------
+
+    /// System Handler Control and State Register
+    pub fn reg_shcsr(self: Self) *volatile u32 {
+        return @intToPtr(*volatile u32, self.base + 0x124);
+    }
+
+    pub const SHCSR_MEMFAULTACT: u32 = 1 << 0;
+    pub const SHCSR_BUSFAULTACT: u32 = 1 << 1;
+    pub const SHCSR_HARDFAULTACT: u32 = 1 << 2;
+    pub const SHCSR_USGFAULTACT: u32 = 1 << 3;
+    pub const SHCSR_SECUREFAULTACT: u32 = 1 << 4;
+    pub const SHCSR_NMIACT: u32 = 1 << 5;
+    pub const SHCSR_SVCCALLACT: u32 = 1 << 7;
+    pub const SHCSR_MONITORACT: u32 = 1 << 8;
+    pub const SHCSR_PENDSVACT: u32 = 1 << 10;
+    pub const SHCSR_SYSTICKACT: u32 = 1 << 11;
+    pub const SHCSR_USGFAULTPENDED: u32 = 1 << 12;
+    pub const SHCSR_MEMFAULTPENDED: u32 = 1 << 13;
+    pub const SHCSR_BUSFAULTPENDED: u32 = 1 << 14;
+    pub const SHCSR_SYSCALLPENDED: u32 = 1 << 15;
+    pub const SHCSR_MEMFAULTENA: u32 = 1 << 16;
+    pub const SHCSR_BUSFAULTENA: u32 = 1 << 17;
+    pub const SHCSR_USGFAULTENA: u32 = 1 << 18;
+    pub const SHCSR_SECUREFAULTENA: u32 = 1 << 19;
+    pub const SHCSR_SECUREFAULTPENDED: u32 = 1 << 20;
+    pub const SHCSR_HARDFAULTPENDED: u32 = 1 << 21;
+};
+
+/// Represents the System Control Block instance corresponding to the current
+/// security mode.
+pub const scb = Nvic.with_base(0xe000ec00);
+
+/// Exception numbers defined by Arm-M.
+pub const irqs = struct {
+    pub const Reset_IRQn: usize = 1;
+    pub const Nmi_IRQn: usize = 2;
+    pub const SecureHardFault_IRQn: usize = 3;
+    pub const MemManageFault_IRQn: usize = 4;
+    pub const BusFault_IRQn: usize = 5;
+    pub const UsageFault_IRQn: usize = 6;
+    pub const SecureFault_IRQn: usize = 7;
+    pub const SvCall_IRQn: usize = 11;
+    pub const DebugMonitor_IRQn: usize = 12;
+    pub const PendSv_IRQn: usize = 14;
+    pub const SysTick_IRQn: usize = 15;
+    pub const InterruptBase_IRQn: usize = 16;
+
+    pub fn Interrupt_IRQn(i: usize) usize {
+        return @This().InterruptBase_IRQn + i;
+    }
+};
