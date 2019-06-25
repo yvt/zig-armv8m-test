@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const arm_m = @import("arm_m.zig");
 const an505 = @import("an505.zig");
 
 export fn main() void {
@@ -7,6 +8,21 @@ export fn main() void {
     an505.Uart0.configure(25e6, 115200);
     an505.Uart0.print("(Hit ^A X to quit QEMU)\r\n");
     an505.Uart0.print("hello!\r\n");
+
+    // Configure SysTick
+    arm_m.sys_tick.reg_rvr().* = 1000 * 100; // fire every 100 milliseconds
+    arm_m.sys_tick.reg_csr().* = arm_m.SysTick.CSR_ENABLE |
+        arm_m.SysTick.CSR_TICKINT;
+
+    // Idle loop
+    while (true) {}
+}
+
+var counter: u8 = 0;
+
+extern fn handle_sys_tick() void {
+    counter +%= 1;
+    an505.Uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
 }
 
 /// Not a function, actually, but suppresses type error
@@ -46,7 +62,7 @@ export const exception_vectors linksection(".isr_vector") = [_]extern fn () void
     unhandled("DebugMonitor"), // DebugMonitor
     unhandled("Reserved 4"), // Reserved 4
     unhandled("PendSV"), // PendSV
-    unhandled("SysTick"), // SysTick
+    handle_sys_tick, // SysTick
     unhandled("External interrupt 0"), // External interrupt 0
     unhandled("External interrupt 1"), // External interrupt 1
     unhandled("External interrupt 2"), // External interrupt 2
