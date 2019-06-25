@@ -1,4 +1,4 @@
-// Some parts of this source code were adapted from:
+// Some parts of this source code were adopted from:
 // https://github.com/altera-opensource/linux-socfpga/blob/master/drivers/tty/serial/mps2-uart.c
 const format = @import("std").fmt.format;
 

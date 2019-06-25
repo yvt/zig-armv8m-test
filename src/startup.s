@@ -1,4 +1,3 @@
-
   .syntax unified
   .thumb
   .cpu cortex-m33
