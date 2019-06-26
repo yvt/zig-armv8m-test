@@ -46,8 +46,15 @@ export fn main() void {
         .nsc = true,
     });
 
-    // TODO: Configure SSRAM1 MPC
-    // TODO: Configure IRAM MPC
+    // Configure MPC to enable Non-Secure access to SSRAM1 (`0x[01]0200000`)
+    // for the range `[0x200000, 0x3fffff]`.
+    an505.ssram1_mpc.setEnableBusError(true);
+    an505.ssram1_mpc.assignRangeToNonSecure(0x200000, 0x400000);
+
+    // Configure MPC to enable Non-Secure access to SSRAM3 (`0x[23]8200000`)
+    // for the range `[0, 0x1fffff]`.
+    an505.ssram3_mpc.setEnableBusError(true);
+    an505.ssram3_mpc.assignRangeToNonSecure(0, 0x200000);
 
     // Enable SAU
     arm_cmse.sau.regCtrl().* |= arm_cmse.Sau.CTRL_ENABLE;
