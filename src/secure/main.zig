@@ -37,7 +37,7 @@ export fn main() void {
     an505.uart0.print("Booting the Non-Secure code...\r\n");
 
     // Call Non-Secure code's entry point
-    const ns_entry = @intToPtr(*volatile fn()void, 0x00200004).*;
+    const ns_entry = @intToPtr(*volatile fn () void, 0x00200004).*;
     arm_cmse.callNs0(ns_entry);
 
     an505.uart0.print("Non-Secure reset handler returned unexpectedly!\r\n");
@@ -48,7 +48,7 @@ var counter: u8 = 0;
 
 extern fn handleSysTick() void {
     counter +%= 1;
-    an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
+    an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4 ..][0..1]);
 }
 
 /// Not a function, actually, but suppresses type error

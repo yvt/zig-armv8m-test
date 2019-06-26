@@ -22,7 +22,7 @@ var counter: u8 = 0;
 
 extern fn handleSysTick() void {
     counter +%= 1;
-    an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
+    an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4 ..][0..1]);
 }
 
 /// Not a function, actually, but suppresses type error
