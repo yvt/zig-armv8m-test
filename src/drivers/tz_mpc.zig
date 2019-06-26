@@ -22,7 +22,7 @@ pub const TzMpc = struct {
     /// The range might be rounded to the block size the hardware is configured
     /// with.
     pub fn assignRangeToNonSecure(self: Self, start: u32, end: u32) void {
-        self.update_range(start, end, Masks{ 0x00000000, 0xffffffff });
+        self.updateRange(start, end, Masks{ 0x00000000, 0xffffffff });
     }
 
     /// Assign an address range to Secure.
@@ -30,14 +30,14 @@ pub const TzMpc = struct {
     /// The range might be rounded to the block size the hardware is configured
     /// with.
     pub fn assignRangeToSecure(self: Self, start: u32, end: u32) void {
-        self.update_range(start, end, Masks{ 0x00000000, 0x00000000 });
+        self.updateRange(start, end, Masks{ 0x00000000, 0x00000000 });
     }
 
     pub fn setEnableBusError(self: Self, value: bool) void {
         if (value) {
-            self.reg_ctrl().* |= CTRL_SECURITY_ERROR_RESPONSE;
+            self.regCtrl().* |= CTRL_SECURITY_ERROR_RESPONSE;
         } else {
-            self.reg_ctrl().* &= ~CTRL_SECURITY_ERROR_RESPONSE;
+            self.regCtrl().* &= ~CTRL_SECURITY_ERROR_RESPONSE;
         }
     }
 
@@ -64,19 +64,19 @@ pub const TzMpc = struct {
     // TODO: Registers related to interrupt
 
     fn blockSizeShift(self: Self) u5 {
-        return @truncate(u5, self.reg_blk_cfg().*) + 5;
+        return @truncate(u5, self.regBlkCfg().*) + 5;
     }
 
     fn updateLut(self: Self, masks: Masks) void {
-        const lut = self.reg_blk_lut();
+        const lut = self.regBlkLut();
         lut.* = (lut.* & masks[0]) ^ masks[1];
     }
 
-    fn updateRange(self: Self, start: u32, end: u32, masks: Masks) void {
+    fn updateRange(self: Self, startBytes: u32, endBytes: u32, masks: Masks) void {
         // (Silently) round to the block size used by the hardware
-        const shift = self.block_size_shift();
-        start >>= shift;
-        end >>= shift;
+        const shift = self.blockSizeShift();
+        const start = startBytes >> shift;
+        const end = endBytes >> shift;
 
         if (start >= end) {
             return;
@@ -85,33 +85,33 @@ pub const TzMpc = struct {
         const start_group = start / 32;
         const end_group = end / 32;
 
-        self.reg_ctrl().* &= ~CTRL_AUTOINCREMENT;
-        self.reg_blk_idx().* = start_group;
+        self.regCtrl().* &= ~CTRL_AUTOINCREMENT;
+        self.regBlkIdx().* = start_group;
 
         if (start_group == end_group) {
-            masks = filter_masks(masks, ones_from(start % 32) ^ ones_from(end % 32));
-            self.update_lut(masks);
+            const masks2 = filterMasks(masks, onesFrom(start % 32) ^ onesFrom(end % 32));
+            self.updateLut(masks2);
         } else {
             var group = start_group;
 
             if ((start % 32) != 0) {
-                const cap_masks = filter_masks(masks, ones_from(start % 32));
-                self.update_lut(cap_masks);
+                const cap_masks = filterMasks(masks, onesFrom(start % 32));
+                self.updateLut(cap_masks);
 
                 group += 1;
-                self.reg_blk_idx().* = group;
+                self.regBlkIdx().* = group;
             }
 
             while (group < end_group) {
-                self.update_lut(masks);
+                self.updateLut(masks);
 
                 group += 1;
-                self.reg_blk_idx().* = group;
+                self.regBlkIdx().* = group;
             }
 
             if ((end % 32) != 0) {
-                const cap_masks = filter_masks(masks, ~ones_from(end % 32));
-                self.update_lut(cap_masks);
+                const cap_masks = filterMasks(masks, ~onesFrom(end % 32));
+                self.updateLut(cap_masks);
             }
         }
     }
