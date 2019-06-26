@@ -3,10 +3,10 @@
   .cpu cortex-m33
   .fpu softvfp
 
-.section  .text.handle_reset
-  .weak  handle_reset
-  .type  handle_reset, %function
-handle_reset:
+.section  .text.handleReset
+  .weak  handleReset
+  .type  handleReset, %function
+handleReset:
   ldr   sp, =_main_stack_top      /* set stack pointer */
 
 /* Copy the data segment initializers from flash to SRAM */
@@ -39,4 +39,4 @@ LoopFillZerobss:
 
   b  main
   bx  lr
-.size  handle_reset, .-handle_reset
+.size  handleReset, .-handleReset

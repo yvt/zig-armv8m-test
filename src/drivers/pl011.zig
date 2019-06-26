@@ -38,49 +38,49 @@ pub const Pl011 = struct {
     const Self = @This();
 
     /// Construct a `Pl011` object using the specified MMIO base address.
-    pub fn with_base(base: usize) Self {
+    pub fn withBase(base: usize) Self {
         return Self{ .base = base };
     }
 
-    fn reg_data(self: Self) *volatile u8 {
+    fn regData(self: Self) *volatile u8 {
         return @intToPtr(*volatile u8, self.base + regs.DATA);
     }
 
-    fn reg_state(self: Self) *volatile u8 {
+    fn regState(self: Self) *volatile u8 {
         return @intToPtr(*volatile u8, self.base + regs.STATE);
     }
 
-    fn reg_ctrl(self: Self) *volatile u8 {
+    fn regCtrl(self: Self) *volatile u8 {
         return @intToPtr(*volatile u8, self.base + regs.CTRL);
     }
 
-    fn reg_int(self: Self) *volatile u8 {
+    fn regInt(self: Self) *volatile u8 {
         return @intToPtr(*volatile u8, self.base + regs.INT);
     }
 
-    fn reg_bauddiv(self: Self) *volatile u32 {
+    fn regBauddiv(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + regs.BAUDDIV);
     }
 
     pub fn configure(self: Self, system_core_clock: u32, baud_Rate: u32) void {
-        self.reg_bauddiv().* = system_core_clock / baud_Rate;
-        self.reg_ctrl().* = regs.CTRL_TX_ENABLE | regs.CTRL_RX_ENABLE;
+        self.regBauddiv().* = system_core_clock / baud_Rate;
+        self.regCtrl().* = regs.CTRL_TX_ENABLE | regs.CTRL_RX_ENABLE;
     }
 
-    pub fn try_write(self: Self, data: u8) bool {
-        if ((self.reg_state().* & regs.STATE_TX_FULL) != 0) {
+    pub fn tryWrite(self: Self, data: u8) bool {
+        if ((self.regState().* & regs.STATE_TX_FULL) != 0) {
             return false;
         }
 
-        self.reg_data().* = data;
+        self.regData().* = data;
         return true;
     }
 
     pub fn write(self: Self, data: u8) void {
-        while (!self.try_write(data)) {}
+        while (!self.tryWrite(data)) {}
     }
 
-    pub fn write_slice(self: Self, data: []const u8) void {
+    pub fn writeSlice(self: Self, data: []const u8) void {
         for (data) |b| {
             self.write(b);
         }
@@ -88,10 +88,10 @@ pub const Pl011 = struct {
 
     /// Render the format string `fmt` with `args` and transmit the output.
     pub fn print(self: Self, comptime fmt: []const u8, args: ...) void {
-        format(self, error{}, Self.print_inner, fmt, args) catch unreachable;
+        format(self, error{}, Self.printInner, fmt, args) catch unreachable;
     }
 
-    fn print_inner(self: Self, data: []const u8) error{}!void {
-        self.write_slice(data);
+    fn printInner(self: Self, data: []const u8) error{}!void {
+        self.writeSlice(data);
     }
 };

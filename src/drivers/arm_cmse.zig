@@ -1,13 +1,13 @@
 // Suppoting functions for Cortex-M Security Extensions
 
 /// Call a niladic Non-Secure function.
-pub inline fn call_ns_0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
+pub inline fn callNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
     // This function call must never be inlined because we utilize a tail
     // function call in the inline assembler.
-    return @noInlineCall(inner_call_ns_0, func);
+    return @noInlineCall(innerCallNs0, func);
 }
 
-fn inner_call_ns_0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
+fn innerCallNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
     comptime {
         if (@typeInfo(@typeOf(func)).Fn.args.len > 0) {
             @compileError("invalid number of formal parameters (expected 0)");

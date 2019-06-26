@@ -9,13 +9,13 @@ export fn main() void {
 fn unhandled(comptime name: []const u8) extern fn () void {
     const ns = struct {
         extern fn handler() void {
-            return unhandled_inner(name);
+            return unhandledInner(name);
         }
     };
     return ns.handler;
 }
 
-fn unhandled_inner(name: []const u8) void {
+fn unhandledInner(name: []const u8) void {
     // TODO: do something!
     while (true) {}
 }
@@ -24,11 +24,11 @@ fn unhandled_inner(name: []const u8) void {
 extern fn _main_stack_top() void;
 
 /// But this is really a function!
-extern fn handle_reset() void;
+extern fn handleReset() void;
 
 export const exception_vectors linksection(".isr_vector") = [_]extern fn () void{
     _main_stack_top,
-    handle_reset,
+    handleReset,
     unhandled("NMI"), // NMI
     unhandled("HardFault"), // HardFault
     unhandled("MemManage"), // MemManage

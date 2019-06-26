@@ -10,12 +10,12 @@ pub const SysTick = struct {
     const Self = @This();
 
     /// Construct a `SysTick` object using the specified MMIO base address.
-    pub fn with_base(base: usize) Self {
+    pub fn withBase(base: usize) Self {
         return Self{ .base = base };
     }
 
     /// SysTick Control and Status Register
-    pub fn reg_csr(self: Self) *volatile u32 {
+    pub fn regCsr(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base);
     }
 
@@ -25,27 +25,27 @@ pub const SysTick = struct {
     pub const CSR_ENABLE: u32 = 1 << 0;
 
     /// SysTick Reload Value Register
-    pub fn reg_rvr(self: Self) *volatile u32 {
+    pub fn regRvr(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x4);
     }
 
     /// SysTick Current Value Register
-    pub fn reg_cvr(self: Self) *volatile u32 {
+    pub fn regCvr(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x8);
     }
 
     /// SysTick Calibration Value Register
-    pub fn reg_calib(self: Self) *volatile u32 {
+    pub fn regCalib(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0xc);
     }
 };
 
 /// Represents the SysTick instance corresponding to the current security mode.
-pub const sys_tick = SysTick.with_base(0xe000e010);
+pub const sys_tick = SysTick.withBase(0xe000e010);
 
 /// Represents the Non-Secure SysTick instance. This register is only accessible
 /// by Secure mode (Armv8-M or later).
-pub const sys_tick_ns = SysTick.with_base(0xe002e010);
+pub const sys_tick_ns = SysTick.withBase(0xe002e010);
 
 /// Nested Vectored Interrupt Controller.
 pub const Nvic = struct {
@@ -54,7 +54,7 @@ pub const Nvic = struct {
     const Self = @This();
 
     /// Construct an `Nvic` object using the specified MMIO base address.
-    pub fn with_base(base: usize) Self {
+    pub fn withBase(base: usize) Self {
         return Self{ .base = base };
     }
 
@@ -62,38 +62,38 @@ pub const Nvic = struct {
     // -----------------------------------------------------------------------
 
     /// Interrupt Set Enable Register.
-    pub fn reg_iser(self: Self) *volatile [16]u32 {
+    pub fn regIser(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base);
     }
 
     /// Interrupt Clear Enable Register.
-    pub fn reg_icer(self: Self) *volatile [16]u32 {
+    pub fn regIcer(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base + 0x80);
     }
 
     /// Interrupt Set Pending Register.
-    pub fn reg_ispr(self: Self) *volatile [16]u32 {
+    pub fn regIspr(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base + 0x100);
     }
 
     /// Interrupt Clear Pending Register.
-    pub fn reg_icpr(self: Self) *volatile [16]u32 {
+    pub fn regIcpr(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base + 0x180);
     }
 
     /// Interrupt Active Bit Register.
-    pub fn reg_iabr(self: Self) *volatile [16]u32 {
+    pub fn regIabr(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base + 0x200);
     }
 
     /// Interrupt Target Non-Secure Register (Armv8-M or later). RAZ/WI from
     /// Non-Secure.
-    pub fn reg_itns(self: Self) *volatile [16]u32 {
+    pub fn regItns(self: Self) *volatile [16]u32 {
         return @intToPtr(*volatile [16]u32, self.base + 0x280);
     }
 
     /// Interrupt Priority Register.
-    pub fn reg_ipri(self: Self) *volatile [512]u8 {
+    pub fn regIpri(self: Self) *volatile [512]u8 {
         return @intToPtr(*volatile [512]u8, self.base + 0x300);
     }
 
@@ -104,28 +104,28 @@ pub const Nvic = struct {
     // number `i`.
 
     /// Enable the interrupt number `irq`.
-    pub fn enable_irq(self: Self, irq: usize) void {
+    pub fn enableIrq(self: Self, irq: usize) void {
         self.reg_iser()[irq >> 5] = u32(1) << @truncate(u5, irq);
     }
 
     /// Disable the interrupt number `irq`.
-    pub fn disable_irq(self: Self, irq: usize) void {
+    pub fn disableIrq(self: Self, irq: usize) void {
         self.reg_icer()[irq >> 5] = u32(1) << @truncate(u5, irq);
     }
 
     /// Set the priority of the interrupt number `irq` to `pri`.
-    pub fn set_irq_priority(self: Self, irq: usize, pri: u8) void {
+    pub fn setIrqPriority(self: Self, irq: usize, pri: u8) void {
         self.reg_ipri()[irq] = pri;
     }
 };
 
 /// Represents the Nested Vectored Interrupt Controller instance corresponding
 /// to the current security mode.
-pub const nvic = Nvic.with_base(0xe000e100);
+pub const nvic = Nvic.withBase(0xe000e100);
 
 /// Represents the Non-Secure Nested Vectored Interrupt Controller instance.
 /// This register is only accessible by Secure mode (Armv8-M or later).
-pub const nvic_ns = Nvic.with_base(0xe002e100);
+pub const nvic_ns = Nvic.withBase(0xe002e100);
 
 /// System Control Block.
 pub const Scb = struct {
@@ -134,7 +134,7 @@ pub const Scb = struct {
     const Self = @This();
 
     /// Construct an `Nvic` object using the specified MMIO base address.
-    pub fn with_base(base: usize) Self {
+    pub fn withBase(base: usize) Self {
         return Self{ .base = base };
     }
 
@@ -142,7 +142,7 @@ pub const Scb = struct {
     // -----------------------------------------------------------------------
 
     /// System Handler Control and State Register
-    pub fn reg_shcsr(self: Self) *volatile u32 {
+    pub fn regShcsr(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x124);
     }
 
@@ -170,7 +170,7 @@ pub const Scb = struct {
 
 /// Represents the System Control Block instance corresponding to the current
 /// security mode.
-pub const scb = Scb.with_base(0xe000ec00);
+pub const scb = Scb.withBase(0xe000ec00);
 
 /// Exception numbers defined by Arm-M.
 pub const irqs = struct {
@@ -187,7 +187,7 @@ pub const irqs = struct {
     pub const SysTick_IRQn: usize = 15;
     pub const InterruptBase_IRQn: usize = 16;
 
-    pub fn Interrupt_IRQn(i: usize) usize {
+    pub fn interruptIRQn(i: usize) usize {
         return @This().InterruptBase_IRQn + i;
     }
 };

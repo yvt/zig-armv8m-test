@@ -6,7 +6,7 @@ MEMORY
     SRAM (rwx) : ORIGIN = 0x38000000, LENGTH = 32K
 }
 
-ENTRY(handle_reset)
+ENTRY(handleReset)
 
 SECTIONS
 {

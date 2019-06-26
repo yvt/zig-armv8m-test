@@ -13,7 +13,7 @@ pub const TzMpc = struct {
     const Self = @This();
 
     /// Construct a `Pl011` object using the specified MMIO base address.
-    pub fn with_base(base: usize) Self {
+    pub fn withBase(base: usize) Self {
         return Self{ .base = base };
     }
 
@@ -21,7 +21,7 @@ pub const TzMpc = struct {
     ///
     /// The range might be rounded to the block size the hardware is configured
     /// with.
-    pub fn assign_range_to_non_secure(self: Self, start: u32, end: u32) void {
+    pub fn assignRangeToNonSecure(self: Self, start: u32, end: u32) void {
         self.update_range(start, end, Masks{ 0x00000000, 0xffffffff });
     }
 
@@ -29,11 +29,11 @@ pub const TzMpc = struct {
     ///
     /// The range might be rounded to the block size the hardware is configured
     /// with.
-    pub fn assign_range_to_secure(self: Self, start: u32, end: u32) void {
+    pub fn assignRangeToSecure(self: Self, start: u32, end: u32) void {
         self.update_range(start, end, Masks{ 0x00000000, 0x00000000 });
     }
 
-    pub fn set_enable_bus_error(self: Self, value: bool) void {
+    pub fn setEnableBusError(self: Self, value: bool) void {
         if (value) {
             self.reg_ctrl().* |= CTRL_SECURITY_ERROR_RESPONSE;
         } else {
@@ -41,38 +41,38 @@ pub const TzMpc = struct {
         }
     }
 
-    fn reg_ctrl(self: Self) *volatile u32 {
+    fn regCtrl(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base);
     }
 
-    fn reg_blk_max(self: Self) *volatile u32 {
+    fn regBlkMax(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x10);
     }
 
-    fn reg_blk_cfg(self: Self) *volatile u32 {
+    fn regBlkCfg(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x14);
     }
 
-    fn reg_blk_idx(self: Self) *volatile u32 {
+    fn regBlkIdx(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x18);
     }
 
-    fn reg_blk_lut(self: Self) *volatile u32 {
+    fn regBlkLut(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x1c);
     }
 
     // TODO: Registers related to interrupt
 
-    fn block_size_shift(self: Self) u5 {
+    fn blockSizeShift(self: Self) u5 {
         return @truncate(u5, self.reg_blk_cfg().*) + 5;
     }
 
-    fn update_lut(self: Self, masks: Masks) void {
+    fn updateLut(self: Self, masks: Masks) void {
         const lut = self.reg_blk_lut();
         lut.* = (lut.* & masks[0]) ^ masks[1];
     }
 
-    fn update_range(self: Self, start: u32, end: u32, masks: Masks) void {
+    fn updateRange(self: Self, start: u32, end: u32, masks: Masks) void {
         // (Silently) round to the block size used by the hardware
         const shift = self.block_size_shift();
         start >>= shift;
@@ -120,12 +120,12 @@ pub const TzMpc = struct {
 /// AND and XOR masks.
 const Masks = [2]u32;
 
-fn filter_masks(masks: Masks, filter: u32) Masks {
+fn filterMasks(masks: Masks, filter: u32) Masks {
     return Masks{ masks[0] & ~filter, masks[1] & filter };
 }
 
 /// Returns `0b11111000...000` where the number of trailing zeros is specified
 /// by `pos`. `pos` must be in `[0, 31]`.
-fn ones_from(pos: u32) u32 {
+fn onesFrom(pos: u32) u32 {
     return u32(0xffffffff) << @intCast(u5, pos);
 }

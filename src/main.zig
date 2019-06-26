@@ -20,7 +20,7 @@ export fn main() void {
 
 var counter: u8 = 0;
 
-extern fn handle_sys_tick() void {
+extern fn handleSysTick() void {
     counter +%= 1;
     an505.uart0.print("\r\x08{}", "|\\-/"[counter % 4..][0..1]);
 }
@@ -29,26 +29,26 @@ extern fn handle_sys_tick() void {
 extern fn _main_stack_top() void;
 
 /// But this is really a function!
-extern fn handle_reset() void;
+extern fn handleReset() void;
 
 /// Create an "unhandled exception" handler.
 fn unhandled(comptime name: []const u8) extern fn () void {
     const ns = struct {
         extern fn handler() void {
-            return unhandled_inner(name);
+            return unhandledInner(name);
         }
     };
     return ns.handler;
 }
 
-fn unhandled_inner(name: []const u8) void {
+fn unhandledInner(name: []const u8) void {
     an505.uart0.print("caught an unhandled exception, system halted: {}\r\n", name);
     while (true) {}
 }
 
 export const exception_vectors linksection(".isr_vector") = [_]extern fn () void{
     _main_stack_top,
-    handle_reset,
+    handleReset,
     unhandled("NMI"), // NMI
     unhandled("HardFault"), // HardFault
     unhandled("MemManage"), // MemManage
@@ -62,7 +62,7 @@ export const exception_vectors linksection(".isr_vector") = [_]extern fn () void
     unhandled("DebugMonitor"), // DebugMonitor
     unhandled("Reserved 4"), // Reserved 4
     unhandled("PendSV"), // PendSV
-    handle_sys_tick, // SysTick
+    handleSysTick, // SysTick
     unhandled("External interrupt 0"), // External interrupt 0
     unhandled("External interrupt 1"), // External interrupt 1
     unhandled("External interrupt 2"), // External interrupt 2
