@@ -170,7 +170,7 @@ pub const Scb = struct {
 
 /// Represents the System Control Block instance corresponding to the current
 /// security mode.
-pub const scb = Nvic.with_base(0xe000ec00);
+pub const scb = Scb.with_base(0xe000ec00);
 
 /// Exception numbers defined by Arm-M.
 pub const irqs = struct {

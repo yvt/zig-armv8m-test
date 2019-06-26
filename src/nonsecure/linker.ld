@@ -1,9 +1,9 @@
 MEMORY
 {
-    /* AN505 ZBT SRAM (SSRAM1) Secure */
-    CODEMEM (rx) : ORIGIN = 0x10000000, LENGTH = 512K
-    /* AN505 ZBT SRAM (SSRAM2) Secure */
-    SRAM (rwx) : ORIGIN = 0x38000000, LENGTH = 32K
+    /* AN505 ZBT SRAM (SSRAM1) Non-Secure alias */
+    CODEMEM (rx) : ORIGIN = 0x00200000, LENGTH = 512K
+    /* AN505 ZBT SRAM (SSRAM3) Non-Secure alias */
+    SRAM (rwx) : ORIGIN = 0x28200000, LENGTH = 32K
 }
 
 ENTRY(handle_reset)
@@ -17,17 +17,6 @@ SECTIONS
         KEEP(*(.isr_vector*))
         . = ALIGN(4);
     } > CODEMEM
-
-
-    .gnu.sgstubs :
-    {
-        . = ALIGN(32);
-        __nsc_start = .;
-
-    } > CODEMEM
-
-    . = ALIGN(32);
-    __nsc_end = .;
 
     .text :
     {

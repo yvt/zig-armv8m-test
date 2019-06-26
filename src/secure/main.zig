@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const arm_cmse = @import("../drivers/arm_cmse.zig");
 const arm_m = @import("../drivers/arm_m.zig");
 const an505 = @import("../drivers/an505.zig");
 
@@ -8,21 +9,31 @@ export fn main() void {
     // debugging. (Without this, they all escalate to HardFault)
     arm_m.scb.reg_shcsr().* =
         arm_m.Scb.SHCSR_MEMFAULTENA |
-        arm_m.SHCSR_BUSFAULTENA |
-        arm_m.SHCSR_USGFAULTENA |
-        arm_m.SHCSR_SECUREFAULTENA;
+        arm_m.Scb.SHCSR_BUSFAULTENA |
+        arm_m.Scb.SHCSR_USGFAULTENA |
+        arm_m.Scb.SHCSR_SECUREFAULTENA;
 
     // :( <https://github.com/ziglang/zig/issues/504>
     an505.uart0.configure(25e6, 115200);
     an505.uart0.print("(Hit ^A X to quit QEMU)\r\n");
-    an505.uart0.print("hello!\r\n");
+    an505.uart0.print("The Secure code is running!\r\n");
 
     // Configure SysTick
     arm_m.sys_tick.reg_rvr().* = 1000 * 100; // fire every 100 milliseconds
     arm_m.sys_tick.reg_csr().* = arm_m.SysTick.CSR_ENABLE |
         arm_m.SysTick.CSR_TICKINT;
 
-    // Idle loop
+    // TODO: Configure SAU
+    // TODO: Configure SSRAM1 MPC
+    // TODO: Configure IRAM MPC
+
+    an505.uart0.print("Booting the Non-Secure code...\r\n");
+
+    // Call Non-Secure code's entry point
+    const ns_entry = @intToPtr(*volatile fn()void, 0x00200004).*;
+    arm_cmse.call_ns_0(ns_entry);
+
+    an505.uart0.print("Non-Secure reset handler returned unexpectedly!\r\n");
     while (true) {}
 }
 
