@@ -4,6 +4,9 @@ const arm_cmse = @import("../drivers/arm_cmse.zig");
 const arm_m = @import("../drivers/arm_m.zig");
 const an505 = @import("../drivers/an505.zig");
 
+extern var __nsc_start: usize;
+extern var __nsc_end: usize;
+
 export fn main() void {
     // Enable SecureFault, UsageFault, BusFault, and MemManage for ease of
     // debugging. (Without this, they all escalate to HardFault)
@@ -30,9 +33,24 @@ export fn main() void {
     arm_m.sys_tick.regCsr().* = arm_m.SysTick.CSR_ENABLE |
         arm_m.SysTick.CSR_TICKINT;
 
-    // TODO: Configure SAU
+    // Configure SAU
+    const Region = arm_cmse.SauRegion;
+    // AN505 ZBT SRAM (SSRAM1) Non-Secure alias
+    arm_cmse.sau.setRegion(0, Region{ .start = 0x00200000, .end = 0x00400000 });
+    // AN505 ZBT SRAM (SSRAM3) Non-Secure alias
+    arm_cmse.sau.setRegion(1, Region{ .start = 0x28200000, .end = 0x28400000 });
+    // The Non-Secure callable region
+    arm_cmse.sau.setRegion(2, Region{
+        .start = @ptrToInt(&__nsc_start),
+        .end = @ptrToInt(&__nsc_end),
+        .nsc = true,
+    });
+
     // TODO: Configure SSRAM1 MPC
     // TODO: Configure IRAM MPC
+
+    // Enable SAU
+    arm_cmse.sau.regCtrl().* |= arm_cmse.Sau.CTRL_ENABLE;
 
     // Configure the Non-Secure exception vector table
     arm_m.scb_ns.regVtor().* = 0x00200000;
