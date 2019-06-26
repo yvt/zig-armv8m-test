@@ -4,6 +4,14 @@ const arm_m = @import("../drivers/arm_m.zig");
 const an505 = @import("../drivers/an505.zig");
 
 export fn main() void {
+    // Enable SecureFault, UsageFault, BusFault, and MemManage for ease of
+    // debugging. (Without this, they all escalate to HardFault)
+    arm_m.scb.reg_shcsr().* =
+        arm_m.Scb.SHCSR_MEMFAULTENA |
+        arm_m.SHCSR_BUSFAULTENA |
+        arm_m.SHCSR_USGFAULTENA |
+        arm_m.SHCSR_SECUREFAULTENA;
+
     // :( <https://github.com/ziglang/zig/issues/504>
     an505.uart0.configure(25e6, 115200);
     an505.uart0.print("(Hit ^A X to quit QEMU)\r\n");
