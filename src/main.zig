@@ -1,7 +1,7 @@
 const std = @import("std");
 
-const arm_m = @import("arm_m.zig");
-const an505 = @import("an505.zig");
+const arm_m = @import("drivers/arm_m.zig");
+const an505 = @import("drivers/an505.zig");
 
 export fn main() void {
     // :( <https://github.com/ziglang/zig/issues/504>
