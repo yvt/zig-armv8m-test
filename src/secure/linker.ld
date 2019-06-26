@@ -23,7 +23,7 @@ SECTIONS
     {
         . = ALIGN(32);
         __nsc_start = .;
-
+        KEEP(*(.gnu.sgstubs*))
     } > CODEMEM
 
     . = ALIGN(32);

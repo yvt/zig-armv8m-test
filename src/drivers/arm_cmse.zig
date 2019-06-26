@@ -1,4 +1,5 @@
 // Suppoting functions for Cortex-M Security Extensions
+const builtin = @import("builtin");
 
 /// Call a niladic Non-Secure function.
 pub inline fn callNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
@@ -24,6 +25,68 @@ fn innerCallNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
     );
 
     unreachable;
+}
+
+/// Export a Non-Secure-callable function.
+///
+/// This function tries to achieve the effect similar to that of
+/// `__attribute__((cmse_nonsecure_entry))`. It does not utilize the special
+/// symbol `__acle_se_*` since it's probably not supported by the vanilla `lld`.
+/// (TODO: needs confirmation)
+/// It only supports a particular combination of parameter and return types.
+/// Handling other combinations, especially those involving parameter passing
+/// on the stack, is very difficult to implement here.
+///
+/// This comptime function generates a veneer function in the `.gnu.sgstubs`
+/// section. The section must be configured as a Non-Secure-callable region for
+/// it to be actually callable from Non-Secure.
+///
+/// On return, it clears caller-saved registers (to prevent the leakage of
+/// confidential information). (TODO: Clear FP registers)
+///
+/// See “ARM®v8-M Security Extensions: Requirements on Development Tools” for
+/// other guidelines regarding the use of Non-Secure-callable functions.
+pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern fn (usize, usize, usize, usize) usize) void {
+    const Veneer = struct {
+        extern fn veneer() linksection(".gnu.sgstubs") void {
+            // See another comment regarding `.cpu`
+            asm volatile (
+                \\ .cpu cortex-m33
+                \\
+                \\ # Mark this function as a valid entry point.
+                \\ sg
+                \\
+                \\ push {r7, lr}
+                : // no output
+                : // no input
+            // Actually we don't modify any of them. They are needed
+            // to make sure other instructions (specifically, the load of
+            // `func`) aren't moved to the front of `sg`.
+                : "memory", "r7"
+            );
+            asm volatile (
+                \\ .cpu cortex-m33
+                \\
+                \\ # Call the original function
+                \\ blx %[func]
+                \\
+                \\ # Clear caller-saved registers
+                \\ # TODO: clear FP registers
+                \\ mov r1, #0
+                \\ mov r2, #0
+                \\ mov r3, #0
+                \\
+                \\ # Return
+                \\ pop {r7, lr}
+                \\ bxns lr
+                : // no output
+                : [func] "{r7}" (func)
+            );
+
+            unreachable;
+        }
+    };
+    @export(name, Veneer.veneer, builtin.GlobalLinkage.Strong);
 }
 
 /// Security Attribution Unit.
