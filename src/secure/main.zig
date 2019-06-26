@@ -13,6 +13,13 @@ export fn main() void {
         arm_m.Scb.SHCSR_USGFAULTENA |
         arm_m.Scb.SHCSR_SECUREFAULTENA;
 
+    // Enable Non-Secure BusFault, HardFault, and NMI.
+    // Prioritize Secure exceptions.
+    arm_m.scb.regAircr().* =
+        (arm_m.scb.regAircr().* & ~arm_m.Scb.AIRCR_VECTKEY_MASK) |
+        arm_m.Scb.AIRCR_BFHFNMINS | arm_m.Scb.AIRCR_PRIS |
+        arm_m.Scb.AIRCR_VECTKEY_MAGIC;
+
     // :( <https://github.com/ziglang/zig/issues/504>
     an505.uart0.configure(25e6, 115200);
     an505.uart0.print("(Hit ^A X to quit QEMU)\r\n");

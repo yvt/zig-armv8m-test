@@ -166,6 +166,25 @@ pub const Scb = struct {
     pub const SHCSR_SECUREFAULTENA: u32 = 1 << 19;
     pub const SHCSR_SECUREFAULTPENDED: u32 = 1 << 20;
     pub const SHCSR_HARDFAULTPENDED: u32 = 1 << 21;
+
+    /// Application Interrupt and Reset Control Register
+    pub fn regAircr(self: Self) *volatile u32 {
+        return @intToPtr(*volatile u32, self.base + 0x10c);
+    }
+
+    pub const AIRCR_VECTCLRACTIVE: u32 = 1 << 1;
+    pub const AIRCR_SYSRESETREQ: u32 = 1 << 2;
+    pub const AIRCR_SYSRESETREQS: u32 = 1 << 3;
+    pub const AIRCR_DIT: u32 = 1 << 4;
+    pub const AIRCR_IESB: u32 = 1 << 5;
+    pub const AIRCR_PRIGROUP_SHIFT: u5 = 8;
+    pub const AIRCR_PRIGROUP_MASK: u32 = 0b111 << AIRCR_PRIGROUP_SHIFT;
+    pub const AIRCR_BFHFNMINS: u32 = 1 << 13;
+    pub const AIRCR_PRIS: u32 = 1 << 14;
+    pub const AIRCR_ENDIANNESS: u32 = 1 << 15;
+    pub const AIRCR_VECTKEY_SHIFT: u5 = 16;
+    pub const AIRCR_VECTKEY_MASK: u32 = 0xffff << AIRCR_VECTKEY_SHIFT;
+    pub const AIRCR_VECTKEY_MAGIC: u32 = 0x05fa;
 };
 
 /// Represents the System Control Block instance corresponding to the current
