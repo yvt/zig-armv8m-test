@@ -12,12 +12,12 @@ pub fn build(b: *Builder) !void {
     //       `error: instruction variant requires ARMv6 or later`
     const arch = builtin.Arch{ .thumb = .v7m };
 
-    const exec_name = if (want_gdb) "test-dbg" else "test";
-    const exe = b.addExecutable(exec_name, "src/main.zig");
-    exe.setLinkerScriptPath("src/linker.ld");
+    const exec_name = if (want_gdb) "secure-dbg" else "secure";
+    const exe = b.addExecutable(exec_name, "src/secure.zig");
+    exe.setLinkerScriptPath("src/secure/linker.ld");
     exe.setTarget(arch, .freestanding, .eabi);
     exe.setBuildMode(mode);
-    exe.addAssemblyFile("src/startup.s");
+    exe.addAssemblyFile("src/secure/startup.s");
     exe.setOutputDir("zig-cache");
     // TODO: "-mthumb -mfloat-abi=soft -msoft-float -march=armv8-m.main");
 
