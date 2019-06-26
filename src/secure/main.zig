@@ -34,6 +34,9 @@ export fn main() void {
     // TODO: Configure SSRAM1 MPC
     // TODO: Configure IRAM MPC
 
+    // Configure the Non-Secure exception vector table
+    arm_m.scb_ns.regVtor().* = 0x00200000;
+
     an505.uart0.print("Booting the Non-Secure code...\r\n");
 
     // Call Non-Secure code's entry point

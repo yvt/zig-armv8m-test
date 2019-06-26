@@ -185,11 +185,20 @@ pub const Scb = struct {
     pub const AIRCR_VECTKEY_SHIFT: u5 = 16;
     pub const AIRCR_VECTKEY_MASK: u32 = 0xffff << AIRCR_VECTKEY_SHIFT;
     pub const AIRCR_VECTKEY_MAGIC: u32 = 0x05fa;
+
+    /// Vector Table Offset Register
+    pub fn regVtor(self: Self) *volatile u32 {
+        return @intToPtr(*volatile u32, self.base + 0x108);
+    }
 };
 
 /// Represents the System Control Block instance corresponding to the current
 /// security mode.
 pub const scb = Scb.withBase(0xe000ec00);
+
+/// Represents the System Control Block instance for Non-Secure mode.
+/// This register is only accessible by Secure mode (Armv8-M or later).
+pub const scb_ns = Scb.withBase(0xe002ec00);
 
 /// Exception numbers defined by Arm-M.
 pub const irqs = struct {
