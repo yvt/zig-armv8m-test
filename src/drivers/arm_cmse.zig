@@ -89,63 +89,66 @@ pub inline fn ttat(p: var) AddressInfo {
 /// Check Non-Secure access permissions for an object of type `ty` at `ptr`.
 ///
 /// Returns `@intToPtr(*volatile ty, ptr)` if the check succeeds; otherwise,
-/// `null`.
-pub inline fn checkObject(comptime ty: type, ptr: usize, options: CheckOptions) ?*volatile ty {
+/// an error value.
+pub inline fn checkObject(comptime ty: type, ptr: usize, options: CheckOptions) CheckObjectError!*volatile ty {
     // Check alignment
     const alignment = @alignOf(ty);
 
     if ((ptr & ((1 << alignment) - 1)) != 0) {
-        return null;
+        return CheckObjectError.Misaligned;
     }
 
     // Check access
-    if (checkAddressRange(ptr, @sizeOf(ty), options)) {
-        return @intToPtr(?*volatile ty, ptr);
-    } else {
-        return null;
-    }
+    try checkAddressRange(ptr, @sizeOf(ty), options);
+
+    return @intToPtr(*volatile ty, ptr);
 }
+
+pub const CheckObjectError = error{Misaligned} || CheckError;
 
 /// Check Non-Secure access permissions for a slice of element type `ty`
 /// starting at `ptr`, containing `count` elements.
 ///
 /// Returns a slice of type `[]volatile ty` if the check succeeds; otherwise,
-/// `null`.
-pub inline fn checkSlice(comptime ty: type, ptr: usize, count: usize, options: CheckOptions) ?[]volatile ty {
+/// an error value..
+pub inline fn checkSlice(comptime ty: type, ptr: usize, count: usize, options: CheckOptions) CheckSliceError![]volatile ty {
     // Check alignment
     const alignment = @alignOf(ty);
 
     if ((ptr & ((1 << alignment) - 1)) != 0) {
-        return null;
+        return CheckSliceError.Misaligned;
     }
 
     // Check size
     var size: usize = undefined;
     if (!@mulWithOverflow(usize, count, @sizeOf(ty), &size)) {
-        return null;
+        return CheckSliceError.SizeTooLarge;
     }
 
     // Check access
-    if (checkAddressRange(ptr, size, options)) {
-        return @intToPtr([*]volatile ty, ptr)[0..size];
-    } else {
-        return null;
-    }
+    try checkAddressRange(ptr, size, options);
+
+    return @intToPtr([*]volatile ty, ptr)[0..size];
 }
+
+pub const CheckSliceError = error{
+    Misaligned,
+    SizeTooLarge,
+} || CheckError;
 
 /// Check Non-Secure access permissions for the specified address range.
 ///
-/// Returns `false` if the check fail; otherwise, `true`.
+/// Returns an error value if the check fail; otherwise, `{}`.
 ///
 /// This roughly follows the address range check intrinsic described in:
 /// “ARM®v8-M Security Extensions: Requirements on Development Tools”
-pub inline fn checkAddressRange(ptr: var, size: usize, options: CheckOptions) bool {
+pub inline fn checkAddressRange(ptr: var, size: usize, options: CheckOptions) CheckError!void {
     const start = if (@typeOf(ptr) == usize) ptr else @ptrToInt(ptr);
     var end: usize = start;
 
     if (size > 0 and !@addWithOverflow(usize, start, size - 1, &end)) {
         // The check should fail if the address range wraps around
-        return false;
+        return CheckError.WrapsAround;
     }
 
     const info1 = if (options.unpriv) ttat(start) else tta(start);
@@ -157,14 +160,22 @@ pub inline fn checkAddressRange(ptr: var, size: usize, options: CheckOptions) bo
     // The chcek should fail if the range crosses any SAU/IDAU/MPU region
     // boundary
     if (info1.value != info2.value) {
-        return false;
+        return CheckError.CrossesRegionBoundary;
     }
 
-    return if (options.readwrite)
+    const ok = if (options.readwrite)
         (info1.flags.nonsecure_readwrite_ok)
     else
         (info1.flags.nonsecure_read_ok);
+
+    return if (ok) {} else CheckError.Forbidden;
 }
+
+pub const CheckError = error{
+    WrapsAround,
+    CrossesRegionBoundary,
+    Forbidden,
+};
 
 pub const CheckOptions = struct {
     /// Checks if the permissions have the `readwrite_ok` field set.
