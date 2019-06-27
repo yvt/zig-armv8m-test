@@ -188,6 +188,9 @@ test "AddressInfo is word-sized" {
 /// This comptime function generates a veneer function in the `.gnu.sgstubs`
 /// section. The section must be configured as a Non-Secure-callable region for
 /// it to be actually callable from Non-Secure.
+/// The function also creates a marker symbol named by prepending the function
+/// name with `__acle_se_` to instruct the linker to include the function in the
+/// CMSE import library.
 ///
 /// On return, it clears caller-saved registers (to prevent the leakage of
 /// confidential information). (TODO: Clear FP registers)
@@ -235,6 +238,7 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
         }
     };
     @export(name, Veneer.veneer, builtin.GlobalLinkage.Strong);
+    @export("__acle_se_" ++ name, Veneer.veneer, builtin.GlobalLinkage.Strong);
 }
 
 /// Security Attribution Unit.
