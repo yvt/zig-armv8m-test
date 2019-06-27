@@ -304,7 +304,7 @@ pub const Sau = struct {
         self.regRnar().* = i;
         self.regRlar().* = 0; // Disable the region first
         self.regRbar().* = region.start;
-        self.regRlar().* = region.end | RLAR_ENABLE | if (region.nsc) RLAR_NSC else 0;
+        self.regRlar().* = (region.end - 32) | RLAR_ENABLE | if (region.nsc) RLAR_NSC else 0;
     }
 };
 
