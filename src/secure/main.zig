@@ -56,6 +56,10 @@ export fn main() void {
     an505.ssram3_mpc.setEnableBusError(true);
     an505.ssram3_mpc.assignRangeToNonSecure(0, 0x200000);
 
+    // Configure IDAU to enable Non-Secure Callable regions
+    // for the code memory `[0x10000000, 0x1dffffff]`
+    an505.spcb.regNsccfg().* |= an505.Spcb.NSCCFG_CODENSC;
+
     // Enable SAU
     arm_cmse.sau.regCtrl().* |= arm_cmse.Sau.CTRL_ENABLE;
 
