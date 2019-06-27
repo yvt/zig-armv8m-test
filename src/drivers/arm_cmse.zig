@@ -23,7 +23,7 @@ fn innerCallNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
         \\ .cpu cortex-m33
         \\ bxns %[func]
         :
-        : [func] "r" (func)
+        : [func] "r" (@ptrToInt(func) & ~usize(1))
     );
 
     unreachable;
