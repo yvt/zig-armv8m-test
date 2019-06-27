@@ -6,6 +6,7 @@ const assert = @import("std").debug.assert;
 pub inline fn callNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
     // This function call must never be inlined because we utilize a tail
     // function call in the inline assembler.
+    // TODO: Clear registers
     return @noInlineCall(innerCallNs0, func);
 }
 
@@ -213,7 +214,7 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
             // Actually we don't modify it. This is needed
             // to make sure other instructions (specifically, the load of
             // `func`) aren't moved to the front of `sg`.
-                : "memory"
+                : "memory", "r4"
             );
             asm volatile (
                 \\ .cpu cortex-m33
@@ -221,14 +222,17 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
                 \\ # Call the original function
                 \\ blx %[func]
                 \\
+                \\ pop {r4, lr}
+                \\
                 \\ # Clear caller-saved registers
                 \\ # TODO: clear FP registers
-                \\ mov r1, #0
-                \\ mov r2, #0
-                \\ mov r3, #0
+                \\ mov r1, lr
+                \\ mov r2, lr
+                \\ mov r3, lr
+                \\ mov ip, lr
+                \\ msr apsr, lr
                 \\
                 \\ # Return
-                \\ pop {r4, lr}
                 \\ bxns lr
                 : // no output
                 : [func] "{r4}" (func)
