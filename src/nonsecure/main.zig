@@ -1,8 +1,23 @@
 const std = @import("std");
+const format = @import("std").fmt.format;
+
+const gateways = @import("../common/gateways.zig");
 
 export fn main() void {
-    // TODO
+    debugOutput("NS: Hello from the Non-Secure world!\r\n");
+
     while (true) {}
+}
+
+/// Output a formatted text via a Secure gateway.
+pub fn debugOutput(comptime fmt: []const u8, args: ...) void {
+    format({}, error{}, debugOutputInner, fmt, args) catch unreachable;
+}
+
+fn debugOutputInner(ctx: void, data: []const u8) error{}!void {
+    for (data) |byte| {
+        _ = gateways.debugOutputByte(byte, 0, 0, 0);
+    }
 }
 
 /// Create an "unhandled exception" handler.
@@ -16,7 +31,7 @@ fn unhandled(comptime name: []const u8) extern fn () void {
 }
 
 fn unhandledInner(name: []const u8) void {
-    // TODO: do something!
+    debugOutput("NS: caught an unhandled exception, system halted: {}\r\n", name);
     while (true) {}
 }
 
