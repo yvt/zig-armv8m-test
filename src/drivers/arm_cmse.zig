@@ -199,7 +199,7 @@ test "AddressInfo is word-sized" {
 /// other guidelines regarding the use of Non-Secure-callable functions.
 pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern fn (usize, usize, usize, usize) usize) void {
     const Veneer = struct {
-        extern fn veneer() linksection(".gnu.sgstubs") void {
+        extern nakedcc fn veneer() linksection(".gnu.sgstubs") void {
             // See another comment regarding `.cpu`
             asm volatile (
                 \\ .cpu cortex-m33
@@ -207,13 +207,13 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
                 \\ # Mark this function as a valid entry point.
                 \\ sg
                 \\
-                \\ push {r7, lr}
+                \\ push {r4, lr}
                 : // no output
                 : // no input
-            // Actually we don't modify any of them. They are needed
+            // Actually we don't modify it. This is needed
             // to make sure other instructions (specifically, the load of
             // `func`) aren't moved to the front of `sg`.
-                : "memory", "r7"
+                : "memory"
             );
             asm volatile (
                 \\ .cpu cortex-m33
@@ -228,10 +228,10 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
                 \\ mov r3, #0
                 \\
                 \\ # Return
-                \\ pop {r7, lr}
+                \\ pop {r4, lr}
                 \\ bxns lr
                 : // no output
-                : [func] "{r7}" (func)
+                : [func] "{r4}" (func)
             );
 
             unreachable;
