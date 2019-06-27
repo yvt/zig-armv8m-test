@@ -21,7 +21,6 @@ pub const Spcb = struct {
         return Self{ .base = base };
     }
 
-
     /// Non Secure Callable Configuration for IDAU.
     pub fn regNsccfg(self: Self) *volatile u32 {
         return @intToPtr(*volatile u32, self.base + 0x014);
@@ -33,4 +32,3 @@ pub const Spcb = struct {
 
 /// Represents an instance of Security Privilege Control Block.
 pub const spcb = Spcb.withBase(0x50080000);
-

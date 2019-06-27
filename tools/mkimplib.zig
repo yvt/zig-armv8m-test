@@ -8,7 +8,7 @@ const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 const AutoHashMap = std.AutoHashMap;
 
-const AppError = error {
+const AppError = error{
     SymsSectionNotFound,
     StrtabSectionNotFound,
     UnexpectedEof,
@@ -47,8 +47,7 @@ pub fn main() !void {
     for (syms) |*sym| {
         var elf_sym: elf.Elf32_Sym = undefined;
 
-        const num_read = try input_file.read(
-            @ptrCast([*]u8, &elf_sym)[0 .. @sizeOf(elf.Elf32_Sym)]);
+        const num_read = try input_file.read(@ptrCast([*]u8, &elf_sym)[0..@sizeOf(elf.Elf32_Sym)]);
 
         if (num_read < @sizeOf(elf.Elf32_Sym)) {
             return AppError.UnexpectedEof;
@@ -70,7 +69,7 @@ pub fn main() !void {
     const entry_prefix = "__acle_se_";
     for (syms) |*sym| {
         if (mem.startsWith(u8, sym.name, entry_prefix)) {
-            const bare_name = sym.name[entry_prefix.len ..];
+            const bare_name = sym.name[entry_prefix.len..];
             _ = try entry_sym_map.put(bare_name, {});
         }
     }
@@ -84,7 +83,7 @@ pub fn main() !void {
     try output_stream.stream.write(".syntax unified\n");
 
     for (syms) |*sym| {
-        if (!entry_sym_map.contains(sym.name)){
+        if (!entry_sym_map.contains(sym.name)) {
             continue;
         }
 
@@ -121,7 +120,7 @@ const FileStream = struct {
     const Self = @This();
 
     fn new(file: *fs.File) Self {
-        return Self {
+        return Self{
             .file = file,
             .seekable = AnyerrorSeekableStream{
                 .seekToFn = seekToFn,
