@@ -24,7 +24,10 @@ Do the following:
 ```shell
 $ zig build -Drelease-small qemu
 (Hit ^A X to quit QEMU)
-hello!
+The Secure code is running!
+Booting the Non-Secure code...
+NS: Hello from the Non-Secure world!
+\
 ```
 
 ## License
