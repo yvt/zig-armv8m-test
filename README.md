@@ -32,4 +32,4 @@ NS: Hello from the Non-Secure world!
 
 ## License
 
-This project is under the public domain.
+This project is dual-licensed under the Apache License Version 2.0 and the MIT License.
