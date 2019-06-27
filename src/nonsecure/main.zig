@@ -15,9 +15,7 @@ pub fn debugOutput(comptime fmt: []const u8, args: ...) void {
 }
 
 fn debugOutputInner(ctx: void, data: []const u8) error{}!void {
-    for (data) |byte| {
-        _ = gateways.debugOutputByte(byte, 0, 0, 0);
-    }
+    _ = gateways.debugOutput(data.len, data.ptr, 0, 0);
 }
 
 /// Create an "unhandled exception" handler.

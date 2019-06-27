@@ -83,14 +83,25 @@ export fn main() void {
     while (true) {}
 }
 
-/// The Non-Secure-callable function that outputs a byte to the debug output.
-extern fn nsDebugOutputByte(r0: usize, r1: usize, r2: usize, r32: usize) usize {
-    an505.uart0.write(@truncate(u8, r0));
+/// The Non-Secure-callable function that outputs zero or more bytes to the
+/// debug output.
+extern fn nsDebugOutput(count: usize, ptr: usize, r2: usize, r32: usize) usize {
+    if (arm_cmse.checkSlice(u8, ptr, count, arm_cmse.CheckOptions{})) |bytes| {
+        // It's unsafe to treat Non-Secure pointers as normal pointers (this
+        // is why `bytes` is `[]volatile u8`), so we can't use `writeSlice` here.
+        for (bytes) |byte| {
+            an505.uart0.write(byte);
+        }
+    } else {
+        an505.uart0.print("warning: pointer security check failed\r\n");
+        an505.uart0.print("         count = {}, ptr = 0x{x}\r\n", count, ptr);
+    }
+
     return 0;
 }
 
 comptime {
-    arm_cmse.exportNonSecureCallable("debugOutputByte", nsDebugOutputByte);
+    arm_cmse.exportNonSecureCallable("debugOutput", nsDebugOutput);
 }
 
 var counter: u8 = 0;
