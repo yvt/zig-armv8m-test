@@ -29,11 +29,13 @@ export fn main() void {
     an505.uart0.print("The Secure code is running!\r\n");
 
     // Configure SysTick
+    // -----------------------------------------------------------------------
     arm_m.sys_tick.regRvr().* = 1000 * 100; // fire every 100 milliseconds
     arm_m.sys_tick.regCsr().* = arm_m.SysTick.CSR_ENABLE |
         arm_m.SysTick.CSR_TICKINT;
 
     // Configure SAU
+    // -----------------------------------------------------------------------
     const Region = arm_cmse.SauRegion;
     // AN505 ZBT SRAM (SSRAM1) Non-Secure alias
     arm_cmse.sau.setRegion(0, Region{ .start = 0x00200000, .end = 0x00400000 });
@@ -46,12 +48,14 @@ export fn main() void {
         .nsc = true,
     });
 
-    // Configure MPC to enable Non-Secure access to SSRAM1 (`0x[01]0200000`)
+    // Configure MPCs and IDAU
+    // -----------------------------------------------------------------------
+    // Enable Non-Secure access to SSRAM1 (`0x[01]0200000`)
     // for the range `[0x200000, 0x3fffff]`.
     an505.ssram1_mpc.setEnableBusError(true);
     an505.ssram1_mpc.assignRangeToNonSecure(0x200000, 0x400000);
 
-    // Configure MPC to enable Non-Secure access to SSRAM3 (`0x[23]8200000`)
+    // Enable Non-Secure access to SSRAM3 (`0x[23]8200000`)
     // for the range `[0, 0x1fffff]`.
     an505.ssram3_mpc.setEnableBusError(true);
     an505.ssram3_mpc.assignRangeToNonSecure(0, 0x200000);
@@ -61,8 +65,11 @@ export fn main() void {
     an505.spcb.regNsccfg().* |= an505.Spcb.NSCCFG_CODENSC;
 
     // Enable SAU
+    // -----------------------------------------------------------------------
     arm_cmse.sau.regCtrl().* |= arm_cmse.Sau.CTRL_ENABLE;
 
+    // Boot the Non-Secure code
+    // -----------------------------------------------------------------------
     // Configure the Non-Secure exception vector table
     arm_m.scb_ns.regVtor().* = 0x00200000;
 
