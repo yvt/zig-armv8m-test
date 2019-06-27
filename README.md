@@ -1,7 +1,7 @@
 Zig on Cortex-M33
 =================
 
-This repository includes a small example application that runs on [AN505], a Cortex-M33-based prototyping system on FPGA. Written entirely in [Zig].
+This repository includes a small example application that runs on [AN505], a Cortex-M33-based prototyping system on FPGA. Written mostly in [Zig] and partly in assembler.
 
 [Zig]: https://ziglang.org
 [AN505]: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0505b/index.html
