@@ -2,31 +2,51 @@
 const builtin = @import("builtin");
 const assert = @import("std").debug.assert;
 
-/// Call a niladic Non-Secure function.
-pub inline fn callNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
-    // This function call must never be inlined because we utilize a tail
-    // function call in the inline assembler.
-    // TODO: Clear registers
-    return @noInlineCall(innerCallNs0, func);
-}
-
-fn innerCallNs0(func: var) @typeInfo(@typeOf(func)).Fn.return_type.? {
-    comptime {
-        if (@typeInfo(@typeOf(func)).Fn.args.len > 0) {
-            @compileError("invalid number of formal parameters (expected 0)");
-        }
-    }
+/// Call a Non-Secure function.
+pub fn nonSecureCall(func: var, r0: usize, r1: usize, r2: usize, r3: usize) usize {
+    const target = if (@typeOf(func) == usize) func else @ptrToInt(func);
 
     // Specifying Armv8-M in `build.zig` won't work for some reason, so we have
     // to specify the architecture here using the `.cpu` directive
-    asm volatile (
+    return asm volatile (
         \\ .cpu cortex-m33
-        \\ bxns %[func]
-        :
-        : [func] "r" (@ptrToInt(func) & ~usize(1))
+        \\
+        \\ # r7 is reserved (what?) and cannot be added to the clobber list
+        \\ # r6 is not, but makes sure SP is aligned to 8-byte boundaries
+        \\ push {r6, r7}
+        \\
+        \\ # Clear unbanked registers to remove confidential information.
+        \\ # The compiler automatically saves their contents if they are needed.
+        \\ mov r5, r4
+        \\ mov r6, r4
+        \\ mov r7, r4
+        \\ mov r8, r4
+        \\ mov r9, r4
+        \\ mov r10, r4
+        \\ mov r11, r4
+        \\ mov r12, r4
+        \\
+        \\ # Lazily save floating-point registers
+        \\ sub sp, #136
+        \\ vlstm sp
+        \\ msr apsr, r0
+        \\
+        \\ # Call the target
+        \\ blxns r4
+        \\
+        \\ # Restore floating-point registers
+        \\ vlldm sp
+        \\ add sp, #136
+        \\
+        \\ pop {r6, r7}
+        : [ret] "={r0}" (-> usize)
+        : [r0] "{r0}" (r0),
+          [r1] "{r1}" (r1),
+          [r2] "{r2}" (r2),
+          [r3] "{r3}" (r3),
+          [func] "{r4}" (target & ~usize(1)),
+        : "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r8", "r9", "r10", "r11", "r12"
     );
-
-    unreachable;
 }
 
 /// Generate a `TT` instruction..

@@ -77,7 +77,7 @@ export fn main() void {
 
     // Call Non-Secure code's entry point
     const ns_entry = @intToPtr(*volatile fn () void, 0x00200004).*;
-    arm_cmse.callNs0(ns_entry);
+    _ = arm_cmse.nonSecureCall(ns_entry, 0, 0, 0, 0);
 
     an505.uart0.print("Non-Secure reset handler returned unexpectedly!\r\n");
     while (true) {}
