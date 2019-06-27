@@ -121,7 +121,7 @@ pub inline fn checkSlice(comptime ty: type, ptr: usize, count: usize, options: C
 
     // Check size
     var size: usize = undefined;
-    if (!@mulWithOverflow(usize, count, @sizeOf(ty), &size)) {
+    if (@mulWithOverflow(usize, count, @sizeOf(ty), &size)) {
         return CheckSliceError.SizeTooLarge;
     }
 
@@ -146,10 +146,12 @@ pub inline fn checkAddressRange(ptr: var, size: usize, options: CheckOptions) Ch
     const start = if (@typeOf(ptr) == usize) ptr else @ptrToInt(ptr);
     var end: usize = start;
 
-    if (size > 0 and !@addWithOverflow(usize, start, size - 1, &end)) {
+    if (size > 0 and @addWithOverflow(usize, start, size - 1, &end)) {
         // The check should fail if the address range wraps around
         return CheckError.WrapsAround;
     }
+
+    // TODO: Not sure how to handle `size == 0`. To be safe, we currently treat it as `1`
 
     const info1 = if (options.unpriv) ttat(start) else tta(start);
     const info2 = if (size > 1)
