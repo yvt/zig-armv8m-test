@@ -30,6 +30,8 @@ NS: Hello from the Non-Secure world!
 \
 ```
 
+[![asciicast](https://asciinema.org/a/254103.svg)](https://asciinema.org/a/254103)
+
 ## License
 
 This project is dual-licensed under the Apache License Version 2.0 and the MIT License.
