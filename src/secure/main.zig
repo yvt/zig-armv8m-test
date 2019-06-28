@@ -57,8 +57,13 @@ export fn main() void {
 
     // Enable Non-Secure access to SSRAM3 (`0x[23]8200000`)
     // for the range `[0, 0x1fffff]`.
+    // - It seems that the range SSRAM3's MPC encompasses actually starts at
+    //   `0x[23]8000000`.
+    // - We actually use only the first `0x4000` bytes. However the hardware
+    //   block size is larger than that and the rounding behavior of
+    //   `tz_mpc.zig` is unspecified, so specify the larger range.
     an505.ssram3_mpc.setEnableBusError(true);
-    an505.ssram3_mpc.assignRangeToNonSecure(0, 0x200000);
+    an505.ssram3_mpc.assignRangeToNonSecure(0x200000, 0x400000);
 
     // Configure IDAU to enable Non-Secure Callable regions
     // for the code memory `[0x10000000, 0x1dffffff]`
