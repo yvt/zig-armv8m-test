@@ -6,7 +6,7 @@ const io = std.io;
 const mem = std.mem;
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
-const AutoHashMap = std.AutoHashMap;
+const HashMap = std.HashMap;
 
 const AppError = error{
     SymsSectionNotFound,
@@ -24,9 +24,8 @@ pub fn main() !void {
     // The input ELF file
     var input_file = try fs.File.openRead(args[1]);
     defer input_file.close();
-    var input_elf: elf.Elf = undefined;
     var input_stream = FileStream.new(&input_file);
-    try input_elf.openStream(
+    var input_elf = try elf.Elf.openStream(
         allocator,
         &input_stream.seekable,
         &input_stream.in,
@@ -65,7 +64,7 @@ pub fn main() !void {
     }
 
     // Create a hash set of symbol names to be exported.
-    var entry_sym_map = AutoHashMap([]const u8, void).init(allocator);
+    var entry_sym_map = StringSet.init(allocator);
     const entry_prefix = "__acle_se_";
     for (syms) |*sym| {
         if (mem.startsWith(u8, sym.name, entry_prefix)) {
@@ -109,6 +108,18 @@ fn getString(allocator: *Allocator, e: *elf.Elf, strtab: *const elf.SectionHeade
 
     return list.toOwnedSlice();
 }
+
+fn stringEql(a: []const u8, b: []const u8) bool {
+    if (a.len != b.len) return false;
+    if (a.ptr == b.ptr) return true;
+    return mem.compare(u8, a, b) == .Equal;
+}
+
+fn stringHash(s: []const u8) u32 {
+    return @truncate(u32, std.hash.Wyhash.hash(0, s));
+}
+
+const StringSet = HashMap([]const u8, void, stringHash, stringEql);
 
 const AnyerrorSeekableStream = io.SeekableStream(anyerror, anyerror);
 const AnyerrorInStream = io.InStream(anyerror);
