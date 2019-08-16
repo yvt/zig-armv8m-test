@@ -8,9 +8,7 @@ pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     const want_gdb = b.option(bool, "gdb", "Build for using gdb with qemu") orelse false;
 
-    // TODO: `v8m_mainline` causes the following error during `ar`:
-    //       `error: instruction variant requires ARMv6 or later`
-    const arch = builtin.Arch{ .thumb = .v7m };
+    const arch = builtin.Arch{ .thumb = .v8m_mainline };
 
     // The utility program for creating a CMSE import library
     // -------------------------------------------------------

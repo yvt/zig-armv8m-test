@@ -6,11 +6,7 @@ const assert = @import("std").debug.assert;
 pub fn nonSecureCall(func: var, r0: usize, r1: usize, r2: usize, r3: usize) usize {
     const target = if (@typeOf(func) == usize) func else @ptrToInt(func);
 
-    // Specifying Armv8-M in `build.zig` won't work for some reason, so we have
-    // to specify the architecture here using the `.cpu` directive
     return asm volatile (
-        \\ .cpu cortex-m33
-        \\
         \\ # r7 is reserved (what?) and cannot be added to the clobber list
         \\ # r6 is not, but makes sure SP is aligned to 8-byte boundaries
         \\ push {r6, r7}
@@ -53,7 +49,6 @@ pub fn nonSecureCall(func: var, r0: usize, r1: usize, r2: usize, r3: usize) usiz
 pub inline fn tt(p: var) AddressInfo {
     return AddressInfo{
         .value = asm volatile (
-            \\ .cpu cortex-m33
             \\ tt %0, %1
             : [out] "=r" (-> u32)
             : [p] "r" (p)
@@ -65,7 +60,6 @@ pub inline fn tt(p: var) AddressInfo {
 pub inline fn tta(p: var) AddressInfo {
     return AddressInfo{
         .value = asm volatile (
-            \\ .cpu cortex-m33
             \\ tta %[out], %[p]
             : [out] "=r" (-> u32)
             : [p] "r" (p)
@@ -78,7 +72,6 @@ pub inline fn tta(p: var) AddressInfo {
 pub inline fn ttat(p: var) AddressInfo {
     return AddressInfo{
         .value = asm volatile (
-            \\ .cpu cortex-m33
             \\ ttat %[out], %[p]
             : [out] "=r" (-> u32)
             : [p] "r" (p)
@@ -234,10 +227,7 @@ test "AddressInfo is word-sized" {
 pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern fn (usize, usize, usize, usize) usize) void {
     const Veneer = struct {
         extern nakedcc fn veneer() linksection(".gnu.sgstubs") void {
-            // See another comment regarding `.cpu`
             asm volatile (
-                \\ .cpu cortex-m33
-                \\
                 \\ # Mark this function as a valid entry point.
                 \\ sg
                 \\
@@ -250,8 +240,6 @@ pub fn exportNonSecureCallable(comptime name: []const u8, comptime func: extern 
                 : "memory", "r4"
             );
             asm volatile (
-                \\ .cpu cortex-m33
-                \\
                 \\ # Call the original function
                 \\ blx %[func]
                 \\

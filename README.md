@@ -13,7 +13,7 @@ You need the following things before running this example:
 - Either of the following:
     - [QEMU] 4.0.0 or later. Older versions are not tested but might work.
     - Arm [MPS2+] FPGA prototyping board configured with AN505. The encrypted FPGA image of AN505 is available from [Arm's website].
-- Zig [`8c99a5199324a1aabba698a5127e9ce1df294aa7`](https://github.com/ziglang/zig/commit/8c99a5199324a1aabba698a5127e9ce1df294aa7) (Aug 5, 2019) or later
+- Zig [`2cb1f93`](https://github.com/ziglang/zig/commit/2cb1f93894be3f48f0c49004515fa5e8190f69d9) (Aug 16, 2019) or later
 
 [QEMU]: https://www.qemu.org
 [MPS2+]: https://www.arm.com/products/development-tools/development-boards/mps2-plus
